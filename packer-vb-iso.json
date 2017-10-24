@@ -1,0 +1,53 @@
+{
+    "builders": [
+        {
+            "vm_name": "{{user `hostname`}}",
+            "type": "virtualbox-iso",
+            "guest_os_type": "Ubuntu_64",
+            "guest_additions_mode": "attach",
+            "headless": "true",
+            "communicator": "ssh",
+            "ssh_username": "{{user `ssh_name`}}",
+            "ssh_password": "{{user `ssh_pass`}}",
+            "ssh_timeout": "10m",
+            "shutdown_command": "sleep 30 && echo {{user `ssh_pass`}} 2> /dev/null | sudo -p '' -S shutdown -P now",
+            "skip_export": true,
+            "keep_registered": true,
+            "disk_size" : 10000,
+            "vboxmanage": [
+                ["modifyvm", "{{.Name}}", "--memory", "1024"],
+                ["modifyvm", "{{.Name}}", "--cpus", "2"],
+                ["modifyvm", "{{.Name}}", "--natpf1","HTTP,tcp,127.0.0.1,80,,80"],
+                ["modifyvm", "{{.Name}}", "--natpf1","HTTPS,tcp,127.0.0.1,443,,443"]
+            ],
+            "iso_url":"http://releases.ubuntu.com/{{user `ubuntu_version`}}/ubuntu-{{user `ubuntu_version`}}-server-amd64.iso",
+            "iso_checksum_type": "md5",
+            "iso_checksum_url": "http://releases.ubuntu.com/{{user `ubuntu_version`}}/MD5SUMS",
+            "http_directory" : "http_directory",
+            "http_port_min" : 9001,
+            "http_port_max" : 9001,
+            "boot_command" : [
+                "<esc><esc><enter><wait>",
+                "/install/vmlinuz noapic ",
+                "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
+                "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
+                "hostname={{user `hostname`}} ",
+                "fb=false debconf/frontend=noninteractive ",
+                "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+                "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+                "initrd=/install/initrd.gz -- <enter>"
+            ]
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "file",
+            "source": "{{user `folder_to_upload`}}",
+            "destination": "/tmp/packer"
+        },
+        {
+            "type": "shell",
+            "inline": "chmod +x /tmp/packer/start.sh;echo {{user `ssh_pass`}} | sudo -p '' -S /tmp/packer/{{user `script_to_run`}}"
+        }
+    ]
+  }

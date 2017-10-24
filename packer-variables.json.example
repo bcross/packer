@@ -1,0 +1,8 @@
+{
+    "ssh_name": "administrator",
+    "ssh_pass": "AdminPassword01",
+    "hostname": "packer-vm",
+    "ubuntu_version": "17.04",
+    "folder_to_upload": "../appfolder",
+    "script_to_run": "start.sh"
+}
